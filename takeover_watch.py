@@ -125,6 +125,11 @@ def main():
         sys.exit(0)
 
     resolver = dns.resolver.Resolver()
+    # On some Windows setups dnspython fails to correctly read the system's
+    # configured DNS servers, causing every query to time out even though
+    # the OS itself resolves fine. Forcing well-known public resolvers here
+    # avoids that issue.
+    resolver.nameservers = ["8.8.8.8", "1.1.1.1"]
     resolver.timeout = DNS_TIMEOUT
     resolver.lifetime = DNS_TIMEOUT
 
