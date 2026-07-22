@@ -1,6 +1,9 @@
 certifi==2026.6.17
 charset-normalizer==3.4.9
+customtkinter==6.0.0
+darkdetect==0.8.0
 dnspython==2.8.0
 idna==3.18
+packaging==26.2
 requests==2.34.2
 urllib3==2.7.0
