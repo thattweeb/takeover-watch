@@ -1,23 +1,3 @@
-#!/usr/bin/env python3
-"""
-dork_gen.py
-
-Generates a categorized list of Google dork queries scoped to a single
-domain, for use during AUTHORIZED security research / bug bounty recon
-(i.e. only against domains explicitly listed in scope for a program you're
-enrolled in on HackerOne, Bugcrowd, etc., or domains you own).
-
-This tool does NOT send any requests to the target domain. It only prints
-ready-to-use search queries -- you copy/paste them into Google yourself.
-Google indexes what's already publicly accessible about a domain; these
-queries just help you search that index more precisely.
-
-Usage:
-    python dork_gen.py example.com
-    python dork_gen.py example.com --category files
-    python dork_gen.py example.com --list-categories
-"""
-
 import argparse
 
 

@@ -1,18 +1,3 @@
-#!/usr/bin/env python3
-"""
-takeover_watch.py
-
-Enumerates subdomains for a given domain via crt.sh (Certificate Transparency
-logs) and checks each one's CNAME record for dangling references (NXDOMAIN),
-which can indicate a potential subdomain takeover vulnerability.
-
-Usage:
-    python takeover_watch.py example.com
-
-Requirements:
-    pip install dnspython requests
-"""
-
 import sys
 import time
 import json

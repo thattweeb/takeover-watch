@@ -1,28 +1,3 @@
-#!/usr/bin/env python3
-"""
-owasp_scan.py
-
-A lightweight, passive/light-active web vulnerability scanner that checks a
-target URL against several categories from the OWASP Top 10 (2021). This is
-a RECONNAISSANCE tool -- it does not exploit anything. It sends normal-looking
-GET requests and inspects headers, cookies, and responses for common
-misconfigurations, the same way tools like securityheaders.com, Nikto, or
-OWASP ZAP's baseline scan operate.
-
-IMPORTANT - RESPONSIBLE USE:
-Only run this against domains/applications you own or are explicitly
-authorized to test. This tool performs read-only HTTP requests; it does
-not attempt to exploit, modify, or damage anything. Even so, running any
-scanner against third-party infrastructure without permission can violate
-terms of service or computer-misuse laws in many jurisdictions.
-
-Usage:
-    python owasp_scan.py https://example.com
-
-Requirements:
-    pip install requests
-"""
-
 import sys
 import time
 import re

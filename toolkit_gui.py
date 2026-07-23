@@ -1,28 +1,3 @@
-#!/usr/bin/env python3
-"""
-toolkit_gui.py
-
-A modern, dark-themed desktop GUI (CustomTkinter) front end for three
-security recon tools:
-  - takeover_watch.py  (subdomain takeover detection)
-  - owasp_scan.py      (OWASP Top 10 misconfiguration scanner)
-  - dork_gen.py        (Google dork query generator)
-
-Runs as its own native window -- not a browser. Each tool launches its real
-script as a subprocess (identical to running it from the command line) and
-streams live output into a terminal-style console, so the underlying
-scanning logic is completely untouched; this is purely a front end.
-
-Requirements:
-    pip install customtkinter
-
-Also requires takeover_watch.py, owasp_scan.py, and dork_gen.py to be
-sitting in the SAME folder as this file.
-
-Usage:
-    python toolkit_gui.py
-"""
-
 import os
 import sys
 import subprocess
