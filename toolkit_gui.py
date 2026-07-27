@@ -1,3 +1,28 @@
+#!/usr/bin/env python3
+"""
+toolkit_gui.py
+
+A modern, dark-themed desktop GUI (CustomTkinter) front end for three
+security recon tools:
+  - takeover_watch.py  (subdomain takeover detection)
+  - owasp_scan.py      (OWASP Top 10 misconfiguration scanner)
+  - dork_gen.py        (Google dork query generator)
+
+Runs as its own native window -- not a browser. Each tool launches its real
+script as a subprocess (identical to running it from the command line) and
+streams live output into a terminal-style console, so the underlying
+scanning logic is completely untouched; this is purely a front end.
+
+Requirements:
+    pip install customtkinter
+
+Also requires takeover_watch.py, owasp_scan.py, and dork_gen.py to be
+sitting in the SAME folder as this file.
+
+Usage:
+    python toolkit_gui.py
+"""
+
 import os
 import sys
 import subprocess
@@ -128,11 +153,13 @@ class StatCard(ctk.CTkFrame):
 # Base page layout shared by each tool
 # ---------------------------------------------------------------------------
 class ToolPage(ctk.CTkFrame):
-    def __init__(self, parent, exhibit, title, subtitle, accent=CYAN):
+    def __init__(self, parent, exhibit, title, subtitle, accent=CYAN, guide_text=""):
         super().__init__(parent, fg_color=BG)
         self.runner = ScriptRunner()
         self.output_queue = queue.Queue()
         self.accent = accent
+        self.guide_text = guide_text
+        self.guide_visible = False
 
         header = ctk.CTkFrame(self, fg_color="transparent")
         header.pack(fill="x", padx=32, pady=(28, 6))
@@ -145,8 +172,24 @@ class ToolPage(ctk.CTkFrame):
         ctk.CTkLabel(left, text=subtitle, font=("Segoe UI", 12), text_color=TEXT_DIM,
                      wraplength=560, justify="left").pack(anchor="w")
 
-        self.status_pill = StatusPill(header)
-        self.status_pill.pack(side="right", anchor="n", pady=(4, 0))
+        right_col = ctk.CTkFrame(header, fg_color="transparent")
+        right_col.pack(side="right", anchor="n")
+        self.status_pill = StatusPill(right_col)
+        self.status_pill.pack(anchor="e", pady=(4, 8))
+        self.guide_btn = ctk.CTkButton(
+            right_col, text="?  How does this work?", command=self.toggle_guide,
+            fg_color="transparent", hover_color=PANEL_LIGHT, text_color=accent,
+            border_width=1, border_color=accent, corner_radius=8, height=30,
+            font=("Segoe UI", 11, "bold"),
+        )
+        self.guide_btn.pack(anchor="e")
+
+        self.guide_panel = ctk.CTkFrame(self, fg_color=PANEL_LIGHT, corner_radius=10,
+                                         border_width=1, border_color=accent)
+        ctk.CTkLabel(self.guide_panel, text=self.guide_text, font=("Segoe UI", 12),
+                     text_color=TEXT, wraplength=880, justify="left").pack(
+                         anchor="w", padx=18, pady=14)
+        # not packed yet -- shown/hidden by toggle_guide()
 
         divider = ctk.CTkFrame(self, height=1, fg_color=BORDER)
         divider.pack(fill="x", padx=32, pady=(14, 18))
@@ -181,6 +224,15 @@ class ToolPage(ctk.CTkFrame):
         self.console.tag_config("normal", foreground=TEXT_DIM)
 
         self.after(100, self._poll_queue)
+
+    def toggle_guide(self):
+        self.guide_visible = not self.guide_visible
+        if self.guide_visible:
+            self.guide_panel.pack(fill="x", padx=32, pady=(0, 14), before=self.input_card)
+            self.guide_btn.configure(text="Hide guide")
+        else:
+            self.guide_panel.pack_forget()
+            self.guide_btn.configure(text="?  How does this work?")
 
     def make_button(self, text, command, primary=True):
         return ctk.CTkButton(
@@ -242,7 +294,7 @@ class DashboardPage(ctk.CTkFrame):
 
         header = ctk.CTkFrame(self, fg_color="transparent")
         header.pack(fill="x", padx=32, pady=(28, 6))
-        ctk.CTkLabel(header, text="RECON://TOOLKIT", font=("Cascadia Mono", 11, "bold"),
+        ctk.CTkLabel(header, text="DASHBOARD", font=("Cascadia Mono", 11, "bold"),
                      text_color=CYAN).pack(anchor="w")
         ctk.CTkLabel(header, text="Security Recon Dashboard", font=FONT_TITLE,
                      text_color=TEXT).pack(anchor="w", pady=(2, 2))
@@ -295,7 +347,17 @@ class TakeoverPage(ToolPage):
     def __init__(self, parent):
         super().__init__(parent, "EXHIBIT 01 - takeover_watch.py", "Subdomain Watch",
                           "Finds abandoned DNS records pointing at services that no longer exist.",
-                          accent=CYAN)
+                          accent=CYAN,
+                          guide_text=(
+                              "WHAT THIS DOES: Every website has smaller sub-pages, like blog.example.com "
+                              "or mail.example.com. Some of these are set up to redirect to another service "
+                              "(like a hosting platform), and sometimes that service gets shut down but the "
+                              "redirect is never removed. That's a broken link a stranger could sneak into.\n\n"
+                              "HOW TO USE IT: Type in a domain (like example.com — no https://) and press "
+                              "Run scan. It checks every sub-page it can find and flags any broken redirects "
+                              "in red. Green means that sub-page is fine.\n\n"
+                              "Only run this on a domain you own or have permission to test."
+                          ))
 
         row = ctk.CTkFrame(self.input_card, fg_color="transparent")
         row.pack(fill="x", padx=18, pady=18)
@@ -335,7 +397,18 @@ class OwaspPage(ToolPage):
     def __init__(self, parent):
         super().__init__(parent, "EXHIBIT 02 - owasp_scan.py", "OWASP Top 10 Scan",
                           "Checks headers, cookies, exposed files, and forms against OWASP Top 10 categories.",
-                          accent=AMBER)
+                          accent=AMBER,
+                          guide_text=(
+                              "WHAT THIS DOES: Checks a website for common, well-known security mistakes — "
+                              "things like missing safety settings, files that shouldn't be public (like .env "
+                              "or .git), login forms without proper protection, and outdated software hints. "
+                              "It's the same kind of check professional security tools run first.\n\n"
+                              "HOW TO USE IT: Type in the full website address including https:// and press "
+                              "Run scan. Put your email in Contact so the site owner can identify you if they "
+                              "ever notice the traffic. Red lines are things worth double-checking; green lines "
+                              "mean that part looks fine.\n\n"
+                              "Only run this on a website you own or have explicit permission to test."
+                          ))
 
         row1 = ctk.CTkFrame(self.input_card, fg_color="transparent")
         row1.pack(fill="x", padx=18, pady=(18, 8))
@@ -394,7 +467,19 @@ class DorkPage(ToolPage):
     def __init__(self, parent):
         super().__init__(parent, "EXHIBIT 03 - dork_gen.py", "Dork Generator",
                           "Builds a domain-scoped list of Google search queries. Nothing is sent to the target.",
-                          accent=GREEN)
+                          accent=GREEN,
+                          guide_text=(
+                              "WHAT THIS DOES: Builds a list of special Google search phrases (called 'dorks') "
+                              "for a specific website. These help you find things Google has already indexed "
+                              "publicly about that site — like exposed files or admin pages — without sending "
+                              "any request to the website itself. This tool never touches the target at all; "
+                              "it only writes search text for you to copy.\n\n"
+                              "HOW TO USE IT: Type in a domain (like example.com) and pick a category, then "
+                              "press Generate list. Copy any line you want and paste it directly into Google's "
+                              "search bar yourself.\n\n"
+                              "Only use these on a domain that's in-scope for a bug bounty program you're "
+                              "enrolled in, or one you own."
+                          ))
 
         row = ctk.CTkFrame(self.input_card, fg_color="transparent")
         row.pack(fill="x", padx=18, pady=18)
@@ -452,7 +537,6 @@ class App(ctk.CTk):
         brand = ctk.CTkFrame(sidebar, fg_color="transparent")
         brand.pack(fill="x", padx=20, pady=(26, 30))
         ctk.CTkLabel(brand, text="RECON", font=("Cascadia Mono", 16, "bold"), text_color=CYAN).pack(anchor="w")
-        ctk.CTkLabel(brand, text="// TOOLKIT", font=("Cascadia Mono", 11), text_color=TEXT_DIM).pack(anchor="w")
 
         self.nav_buttons = {}
         nav_items = [
